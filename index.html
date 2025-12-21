@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>De Zéro à Expert Arduino | Electro Mind BENGZ</title>
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Segoe UI', sans-serif;
+}
+
+body{
+  background:#0d0d0d;
+  color:#ffffff;
+  line-height:1.6;
+}
+
+/* HERO */
+.hero{
+  background:linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)),
+  url("images/hero.jpg") center/cover no-repeat;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:20px;
+}
+
+.hero h1{
+  font-size:2.5rem;
+  color:#00ff88;
+}
+
+.hero p{
+  margin:15px 0;
+  font-size:1.1rem;
+}
+
+.btn{
+  display:inline-block;
+  margin-top:20px;
+  padding:15px 30px;
+  background:#00ff88;
+  color:#000;
+  text-decoration:none;
+  font-weight:bold;
+  border-radius:30px;
+  transition:0.3s;
+}
+
+.btn:hover{
+  transform:scale(1.08);
+  box-shadow:0 0 15px #00ff88;
+}
+
+/* SECTIONS */
+section{
+  padding:60px 20px;
+  max-width:1100px;
+  margin:auto;
+}
+
+.section-title{
+  text-align:center;
+  font-size:2rem;
+  color:#00ff88;
+  margin-bottom:40px;
+}
+
+/* PROFILE */
+.profile{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:30px;
+}
+
+.profile img{
+  width:200px;
+  border-radius:50%;
+  border:4px solid #00ff88;
+}
+
+.profile div{
+  flex:1;
+}
+
+/* CARDS */
+.cards{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:20px;
+}
+
+.card{
+  background:#1a1a1a;
+  padding:20px;
+  border-radius:15px;
+  text-align:center;
+  transition:0.3s;
+}
+
+.card:hover{
+  transform:translateY(-5px);
+  box-shadow:0 0 15px rgba(0,255,136,0.4);
+}
+
+.card img{
+  width:100%;
+  border-radius:10px;
+  margin-bottom:15px;
+}
+
+/* FOOTER */
+footer{
+  text-align:center;
+  padding:30px;
+  background:#000;
+  font-size:0.9rem;
+}
+</style>
+</head>
+
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div>
+    <h1>DE ZÉRO À EXPERT ARDUINO</h1>
+    <p>Apprends l’électronique moderne et crée de vrais projets<br>
+    avec <strong>Electro Mind BENGZ</strong></p>
+    <a class="btn" href="https://chat.whatsapp.com/G5v27pjWALkLjMbW0Bsm3T?mode=wwt">REJOINDRE LE GROUPE</a>
+  </div>
+</div>
+
+<!-- PROFIL -->
+<section>
+  <h2 class="section-title">Votre Formateur</h2>
+  <div class="profile">
+    <img src="profil.jpg" alt="Electro Mind BENGZ">
+    <div>
+      <h3>Salomon Shukuru</h3>
+      <p>
+        Formateur en électronique et Arduino.<br>
+        Approche pratique, projets réels, explications simples.<br>
+        Ici, vous ne copiez pas mais vouq comprennez.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- APPRENDRE -->
+<section>
+  <h2 class="section-title">Ce que vous allez apprendre</h2>
+  <div class="cards">
+    <div class="card">
+      <img src="arduino1.jpg">
+      <h3>Arduino & Bases</h3>
+      <p>Comprendre Arduino, composants et schémas</p>
+    </div>
+
+    <div class="card">
+      <img src="arduino2.jpg">
+      <h3>Capteurs & Actionneurs</h3>
+      <p>Ultrason, LED, relais, moteurs, servo</p>
+    </div>
+
+    <div class="card">
+      <img src="arduino3.jpg">
+      <h3>Projets Réels</h3>
+      <p>Alarme, poubelle auto, lave-main, systèmes intelligents</p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<section style="text-align:center;">
+  <h2 class="section-title">Prêt à commencer ?</h2>
+  <a class="btn" href="https://chat.whatsapp.com/G5v27pjWALkLjMbW0Bsm3T?mode=wwt">
+    INTÉGRER LE GROUPE ELECTRO Mind BENGZ pour plus de discution
+  </a>
+</section>
+
+<footer>
+  © 2025 Electro Mind BENGZ • De Zéro à Expert Arduino
+</footer>
+
+</body>
+</html>
