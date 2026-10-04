@@ -1,96 +1,153 @@
-# NOVAWATCH — HT16K33
+# NOVAWATCH — HT16K33 (REAL HARDWARE)
 
-Version adapted from the original NOVAWATCH MAX7219 design to the HT16K33A I2C LED driver.
+Version NOVAWATCH adapted from the original MAX7219 design to the HT16K33A I2C LED driver.
 
-## Hardware
+This sketch is intended for the real hardware below, not a simulator.
 
+## 1. Hardware
 - Arduino Nano
-- HT16K33 16x8 breakout
-- 4-digit 7-segment display, common cathode
+- Adafruit-style HT16K33 16x8 breakout (default I2C address 0x70)
+- 4-digit 7-segment display, COMMON CATHODE
 - DS3231 RTC
-- 7x 74HC595
-- 7x ULN2803A
+- 7 × 74HC595
+- 7 × ULN2803A
 - Buzzer
-- 4 buttons
-- Colon LED(s)
-- 12 V DC input with a suitable 5 V regulator/buck converter
+- POWER / MODE / PLUS / MINUS buttons
+- External colon LED(s) on D7
+- 12 V input with a proper 5 V regulator/buck converter
 
-## Arduino Nano → HT16K33
+## 2. Arduino Nano → HT16K33
 
-| Nano | HT16K33 |
+| Arduino Nano | HT16K33 breakout |
 |---|---|
 | 5V | VDD |
 | GND | GND |
 | A4 | SDA |
 | A5 | SCL |
 
-The DS3231 stays on the same I2C bus:
+The HT16K33 default address is 0x70.
 
-- DS3231 address: 0x68
-- HT16K33 default address: 0x70
+### DS3231 on the same I2C bus
 
-## HT16K33 → 4-digit common-cathode display
-
-This firmware assumes the following logical mapping:
-
-| HT16K33 | Display |
+| Arduino Nano | DS3231 |
 |---|---|
-| A0 / ROW0 | Segment A |
-| A1 / ROW1 | Segment B |
-| A2 / ROW2 | Segment C |
-| A3 / ROW3 | Segment D |
-| A4 / ROW4 | Segment E |
-| A5 / ROW5 | Segment F |
-| A6 / ROW6 | Segment G |
-| A7 / ROW7 | Decimal point |
-| C0 / COM0 | Digit 1 common cathode |
-| C1 / COM1 | Digit 2 common cathode |
-| C2 / COM2 | Digit 3 common cathode |
-| C3 / COM3 | Digit 4 common cathode |
+| A4 | SDA |
+| A5 | SCL |
+| 5V | VCC |
+| GND | GND |
 
-C4-C7 remain unused.
+The DS3231 uses 0x68, so it can share the same SDA/SCL lines with the HT16K33 at 0x70.
 
-**Important:** the physical pin numbers of the 4-digit display are NOT assumed here. Use the exact datasheet/pinout of the display before connecting wires.
+## 3. HT16K33 → 4-digit common-cathode display
 
-## Buttons / buzzer / contour
+The module outputs are labelled A0...A15 and C0...C7. For this firmware, connect:
 
-- D2 = POWER
-- D3 = MODE
-- D4 = PLUS
-- D5 = MINUS
-- D6 = BUZZER
-- D7 = COLON
-- D8 = 74HC595 DATA
-- D9 = 74HC595 LATCH
-- D13 = shared 74HC595 CLOCK
+| HT16K33 breakout | Display function |
+|---|---|
+| A0 | Segment A |
+| A1 | Segment B |
+| A2 | Segment C |
+| A3 | Segment D |
+| A4 | Segment E |
+| A5 | Segment F |
+| A6 | Segment G |
+| A7 | Decimal point (DP), optional |
+| C0 | Digit 1 common cathode |
+| C1 | Digit 2 common cathode |
+| C2 | Digit 3 common cathode |
+| C3 | Digit 4 common cathode |
+| A8-A15 | Unused |
+| C4-C7 | Unused |
+
+Important: A0/A1/etc. above are the labels printed on the HT16K33 breakout, NOT Arduino analog pins.
+
+The four common-cathode connections must match the four digit commons of the actual display.
+
+### Physical pin numbers of the 4-digit display
+
+Do not guess the physical pin numbers from a generic 12-pin drawing. Different 4-digit common-cathode displays can use different pinouts.
+
+Identify the exact display part number/datasheet, or map its pins with a multimeter/LED test, then connect those physical pins to the logical functions in the table above.
+
+## 4. Buttons / buzzer / colon
+
+| Arduino Nano | Function |
+|---|---|
+| D2 | POWER button |
+| D3 | MODE button |
+| D4 | PLUS button |
+| D5 | MINUS button |
+| D6 | Buzzer |
+| D7 | Colon LED(s) |
+| D8 | 74HC595 DATA |
+| D9 | 74HC595 LATCH |
+| D13 | 74HC595 CLOCK |
+
+Buttons use INPUT_PULLUP, therefore each button is wired between its Arduino pin and GND.
+
+## 5. 74HC595 contour
+
+The original NOVAWATCH contour system remains unchanged:
+- 7 × 74HC595
+- 7 × ULN2803A
+- D8 = DATA
+- D9 = LATCH
+- D13 = CLOCK
 
 The MAX7219 is removed completely.
 
-## HT16K33 RAM mapping
+## 6. HT16K33 RAM mapping used by the firmware
 
-For the HT16K33 16x8 mode, the official Holtek mapping is:
+The HT16K33A official mapping is:
 
-- COM0: RAM 0x00 / 0x01
-- COM1: RAM 0x02 / 0x03
-- COM2: RAM 0x04 / 0x05
-- COM3: RAM 0x06 / 0x07
+| COM | ROW0-ROW7 RAM address |
+|---|---:|
+| COM0 | 0x00 |
+| COM1 | 0x02 |
+| COM2 | 0x04 |
+| COM3 | 0x06 |
 
-The firmware uses the first byte of each pair for ROW0-ROW7.
+The firmware writes the segment pattern into these locations and leaves ROW8-ROW15 unused.
 
-## Important power note
+## 7. NOVAWATCH controls
 
-Do not feed 12 V directly into the 5 V logic rail. Use a proper regulated/buck 5 V supply for the Nano/HT16K33/DS3231/logic, and connect all grounds together.
-
-## Controls
-
+### Normal mode
 - POWER: ON/OFF
-- MODE x1: reset clock to 00:00
-- MODE x2: enter time setting
-- In setting: MODE x1 switches hours/minutes
-- PLUS/MINUS: change selected value
-- MODE x3 in setting: save time
+- MODE ×1: reset clock to 00:00
+- MODE ×2: enter time setting
 
-## Official reference
+### Time setting
+- MODE ×1: switch HOURS ↔ MINUTES
+- PLUS: increase selected value
+- MINUS: decrease selected value
+- MODE ×3: save the new time
 
-Holtek HT16K33A datasheet:
+The MODE multi-click window is 1 second.
+
+## 8. Startup
+
+When POWER is pressed:
+1. HT16K33 is initialized.
+2. Seven-segment startup animation runs.
+3. Buzzer plays the startup melody.
+4. DS3231 time is read.
+5. HH:MM is displayed.
+6. The 74HC595 contour animation starts.
+
+## 9. Power
+
+Never connect 12 V directly to the 5 V logic rail.
+
+Use: 12 V DC → regulated 5 V → Arduino Nano + HT16K33 + DS3231 + logic.
+
+All grounds must be common.
+
+## 10. Firmware
+
+Main sketch: NOVAWATCH/NOVAWATCH_HT16K33.ino
+
+The sketch uses only the Arduino Wire library; no external HT16K33 library is required.
+
+## Official HT16K33A reference
+
 https://www.holtek.com/webapi/116711/HT16K33Av110.pdf
