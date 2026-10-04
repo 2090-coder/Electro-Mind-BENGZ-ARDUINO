@@ -22,7 +22,21 @@ const byte PIN_CLOCK     = 13;
 
 // -------------------- I2C DEVICES ----------------------------
 const byte RTC_ADDRESS = 0x68;
-const byte HT16K33_ADDRESS = 0x70;
+const byte HT16K33_I2C_ADDRESS = 0x70;
+
+const byte HT_ROW0 = 0;
+const byte HT_ROW1 = 1;
+const byte HT_ROW2 = 2;
+const byte HT_ROW3 = 3;
+const byte HT_ROW4 = 4;
+const byte HT_ROW5 = 5;
+const byte HT_ROW6 = 6;
+const byte HT_ROW7 = 7;
+
+const byte HT_COM0 = 0;
+const byte HT_COM1 = 1;
+const byte HT_COM2 = 2;
+const byte HT_COM3 = 3;
 
 // HT16K33 commands
 const byte HT_CMD_SYSTEM_ON    = 0x21;
@@ -51,29 +65,30 @@ const unsigned long BLINK_INTERVAL = 350;
 
 // -------------------- 7-SEGMENT MAP --------------------------
 // These bits correspond to HT16K33 ROW0..ROW7.
-// Wire the display exactly as:
+  // On the breakout these outputs are exposed as A0..A7.
+// Wire the display using the breakout labels as follows:
 // ROW0=A, ROW1=B, ROW2=C, ROW3=D,
 // ROW4=E, ROW5=F, ROW6=G, ROW7=DP.
-const byte SEG_A  = 0x01;
-const byte SEG_B  = 0x02;
-const byte SEG_C  = 0x04;
-const byte SEG_D  = 0x08;
-const byte SEG_E  = 0x10;
-const byte SEG_F  = 0x20;
-const byte SEG_G  = 0x40;
-const byte SEG_DP = 0x80;
+const byte HT_ROW0_SEG_A  = 0x01;
+const byte HT_ROW1_SEG_B  = 0x02;
+const byte HT_ROW2_SEG_C  = 0x04;
+const byte HT_ROW3_SEG_D  = 0x08;
+const byte HT_ROW4_SEG_E  = 0x10;
+const byte HT_ROW5_SEG_F  = 0x20;
+const byte HT_ROW6_SEG_G  = 0x40;
+const byte HT_ROW7_SEG_DP = 0x80;
 
-const byte DIGIT_MASK[10] = {
-  SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F,                    // 0
-  SEG_B | SEG_C,                                                    // 1
-  SEG_A | SEG_B | SEG_D | SEG_E | SEG_G,                            // 2
-  SEG_A | SEG_B | SEG_C | SEG_D | SEG_G,                            // 3
-  SEG_B | SEG_C | SEG_F | SEG_G,                                    // 4
-  SEG_A | SEG_C | SEG_D | SEG_F | SEG_G,                            // 5
-  SEG_A | SEG_C | SEG_D | SEG_E | SEG_F | SEG_G,                    // 6
-  SEG_A | SEG_B | SEG_C,                                            // 7
-  SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F | SEG_G,            // 8
-  SEG_A | SEG_B | SEG_C | SEG_D | SEG_F | SEG_G                     // 9
+const byte HT_DIGIT_MASK[10] = {
+  HT_ROW0_SEG_A | HT_ROW1_SEG_B | HT_ROW2_SEG_C | HT_ROW3_SEG_D | HT_ROW4_SEG_E | HT_ROW5_SEG_F,                    // 0
+  HT_ROW1_SEG_B | HT_ROW2_SEG_C,                                                    // 1
+  HT_ROW0_SEG_A | HT_ROW1_SEG_B | HT_ROW3_SEG_D | HT_ROW4_SEG_E | HT_ROW6_SEG_G,                            // 2
+  HT_ROW0_SEG_A | HT_ROW1_SEG_B | HT_ROW2_SEG_C | HT_ROW3_SEG_D | HT_ROW6_SEG_G,                            // 3
+  HT_ROW1_SEG_B | HT_ROW2_SEG_C | HT_ROW5_SEG_F | HT_ROW6_SEG_G,                                    // 4
+  HT_ROW0_SEG_A | HT_ROW2_SEG_C | HT_ROW3_SEG_D | HT_ROW5_SEG_F | HT_ROW6_SEG_G,                            // 5
+  HT_ROW0_SEG_A | HT_ROW2_SEG_C | HT_ROW3_SEG_D | HT_ROW4_SEG_E | HT_ROW5_SEG_F | HT_ROW6_SEG_G,                    // 6
+  HT_ROW0_SEG_A | HT_ROW1_SEG_B | HT_ROW2_SEG_C,                                            // 7
+  HT_ROW0_SEG_A | HT_ROW1_SEG_B | HT_ROW2_SEG_C | HT_ROW3_SEG_D | HT_ROW4_SEG_E | HT_ROW5_SEG_F | HT_ROW6_SEG_G,            // 8
+  HT_ROW0_SEG_A | HT_ROW1_SEG_B | HT_ROW2_SEG_C | HT_ROW3_SEG_D | HT_ROW5_SEG_F | HT_ROW6_SEG_G                     // 9
 };
 
 // HT16K33 display RAM mapping:
@@ -84,13 +99,13 @@ const byte DIGIT_MASK[10] = {
 // For a 4-digit display, only the first byte of each pair is needed.
 
 void htCommand(byte command) {
-  Wire.beginTransmission(HT16K33_ADDRESS);
+  Wire.beginTransmission(HT16K33_I2C_ADDRESS);
   Wire.write(command);
   Wire.endTransmission();
 }
 
 void htClear() {
-  Wire.beginTransmission(HT16K33_ADDRESS);
+  Wire.beginTransmission(HT16K33_I2C_ADDRESS);
   Wire.write((byte)0x00); // display RAM pointer
   for (byte i = 0; i < 16; i++) {
     Wire.write((byte)0x00);
@@ -113,10 +128,10 @@ void htInit() {
 void htWriteDigit(byte digitIndex, byte segments) {
   if (digitIndex > 3) return;
 
-  // COM0, COM1, COM2, COM3 are at RAM addresses 0x00, 0x02, 0x04, 0x06.
-  byte ramAddress = digitIndex * 2;
+  const byte HT_COM_RAM_ADDRESS[4] = {0x00, 0x02, 0x04, 0x06};
+  byte ramAddress = HT_COM_RAM_ADDRESS[digitIndex];
 
-  Wire.beginTransmission(HT16K33_ADDRESS);
+  Wire.beginTransmission(HT16K33_I2C_ADDRESS);
   Wire.write(ramAddress);
   Wire.write(segments);
   Wire.write((byte)0x00); // second byte = ROW8..ROW15, unused here
@@ -124,10 +139,10 @@ void htWriteDigit(byte digitIndex, byte segments) {
 }
 
 void htDisplayHHMM(byte h, byte m) {
-  htWriteDigit(0, DIGIT_MASK[h / 10]);
-  htWriteDigit(1, DIGIT_MASK[h % 10]);
-  htWriteDigit(2, DIGIT_MASK[m / 10]);
-  htWriteDigit(3, DIGIT_MASK[m % 10]);
+  htWriteDigit(0, HT_DIGIT_MASK[h / 10]);
+  htWriteDigit(1, HT_DIGIT_MASK[h % 10]);
+  htWriteDigit(2, HT_DIGIT_MASK[m / 10]);
+  htWriteDigit(3, HT_DIGIT_MASK[m % 10]);
 }
 
 void htDisplayEdit() {
@@ -140,16 +155,16 @@ void htDisplayEdit() {
     htWriteDigit(0, 0);
     htWriteDigit(1, 0);
   } else {
-    htWriteDigit(0, DIGIT_MASK[hTens]);
-    htWriteDigit(1, DIGIT_MASK[hUnits]);
+    htWriteDigit(0, HT_DIGIT_MASK[hTens]);
+    htWriteDigit(1, HT_DIGIT_MASK[hUnits]);
   }
 
   if (editField == EDIT_MINUTE && !editVisible) {
     htWriteDigit(2, 0);
     htWriteDigit(3, 0);
   } else {
-    htWriteDigit(2, DIGIT_MASK[mTens]);
-    htWriteDigit(3, DIGIT_MASK[mUnits]);
+    htWriteDigit(2, HT_DIGIT_MASK[mTens]);
+    htWriteDigit(3, HT_DIGIT_MASK[mUnits]);
   }
 }
 
@@ -326,15 +341,15 @@ void displaySplash(byte frame) {
   byte mask = 0;
 
   switch (frame % 8) {
-    case 0: mask = SEG_A; break;
-    case 1: mask = SEG_B; break;
-    case 2: mask = SEG_C; break;
-    case 3: mask = SEG_D; break;
-    case 4: mask = SEG_E; break;
-    case 5: mask = SEG_F; break;
-    case 6: mask = SEG_G; break;
-    case 7: mask = SEG_A | SEG_B | SEG_C | SEG_D |
-                      SEG_E | SEG_F | SEG_G; break;
+    case 0: mask = HT_ROW0_SEG_A; break;
+    case 1: mask = HT_ROW1_SEG_B; break;
+    case 2: mask = HT_ROW2_SEG_C; break;
+    case 3: mask = HT_ROW3_SEG_D; break;
+    case 4: mask = HT_ROW4_SEG_E; break;
+    case 5: mask = HT_ROW5_SEG_F; break;
+    case 6: mask = HT_ROW6_SEG_G; break;
+    case 7: mask = HT_ROW0_SEG_A | HT_ROW1_SEG_B | HT_ROW2_SEG_C | HT_ROW3_SEG_D |
+                      HT_ROW4_SEG_E | HT_ROW5_SEG_F | HT_ROW6_SEG_G; break;
   }
 
   htWriteDigit(0, mask);
