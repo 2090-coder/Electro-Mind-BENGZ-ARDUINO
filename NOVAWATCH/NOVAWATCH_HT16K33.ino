@@ -3,7 +3,7 @@
 // ============================================================
 // NOVAWATCH
 // Arduino Nano + HT16K33 + DS3231 + 7x74HC595 + 7xULN2803A
-// 4-chiffre 7-segment CATHODE COMMUNE affichage
+// Affichage a 4 chiffres et 7 segments, CATHODE COMMUNE
 // Alimentation d entree: 12 V DC (utiliser un regulateur abaisseur 5 V adapte)
 // ============================================================
 
@@ -44,7 +44,7 @@ const byte HT_COMMANDE_AFFICHAGE_ACTIVE   = 0x81;
 const byte HT_COMMANDE_LUMINOSITE   = 0xE0;
 
 
-// -------------------- ETAT GLOBAL DE LA MONTRE ---------------------
+// -------------------- ETAT GENERAL DE LA MONTRE ---------------------
 bool montreActive = false;
 bool demarrageActif = false;
 unsigned long debutDemarrage = 0;
