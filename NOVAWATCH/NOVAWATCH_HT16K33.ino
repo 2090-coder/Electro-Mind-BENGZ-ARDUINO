@@ -3,7 +3,7 @@
 // ============================================================
 // NOVAWATCH
 // Arduino Nano + HT16K33 + DS3231 + 7x74HC595 + 7xULN2803A
-// 4-chiffre 7-segment CATHODE COMMUNE display
+// 4-chiffre 7-segment CATHODE COMMUNE affichage
 // Alimentation d entree: 12 V DC (utiliser un regulateur abaisseur 5 V adapte)
 // ============================================================
 
@@ -96,18 +96,18 @@ const byte HT_MASQUE_CHIFFRE[10] = {
 // COM1 -> RAM 0x02/0x03
 // COM2 -> RAM 0x04/0x05
 // COM3 -> RAM 0x06/0x07
-// pour a 4-chiffre display, only the first byte of each pair is needed.
+// pour a 4-chiffre affichage, seul the premier octet of each paire est needed.
 
-void ht16k33Commande(byte command) {
+void ht16k33Commande(byte commande) {
   Wire.beginTransmission(HT16K33_ADRESSE_I2C);
-  Wire.write(command);
+  Wire.write(commande);
   Wire.endTransmission();
 }
 
 void ht16k33Effacer() {
   Wire.beginTransmission(HT16K33_ADRESSE_I2C);
   Wire.write((byte)0x00); // pointeur de RAM d affichage
-  pour (byte i = 0; i < 16; i++) {
+  for (byte i = 0; i < 16; i++) {
     Wire.write((byte)0x00);
   }
   Wire.endTransmission();
@@ -129,10 +129,10 @@ void ht16k33EcrireChiffre(byte chiffreIndex, byte segments) {
   if (chiffreIndex > 3) return;
 
   const byte HT_COM_RAM_ADDRESS[4] = {0x00, 0x02, 0x04, 0x06};
-  byte ramAddress = HT_COM_RAM_ADDRESS[chiffreIndex];
+  byte adresseRam = HT_COM_RAM_ADDRESS[chiffreIndex];
 
   Wire.beginTransmission(HT16K33_ADRESSE_I2C);
-  Wire.write(ramAddress);
+  Wire.write(adresseRam);
   Wire.write(segments);
   Wire.write((byte)0x00); // deuxieme octet = ROW8..ROW15, inutilise ici
   Wire.endTransmission();
@@ -146,39 +146,39 @@ void ht16k33AfficherHeure(byte h, byte m) {
 }
 
 void ht16k33AfficherReglage() {
-  byte hTens = heureReglage / 10;
-  byte hUnits = heureReglage % 10;
-  byte mTens = minuteReglage / 10;
-  byte mUnits = minuteReglage % 10;
+  byte dizaineHeure = heureReglage / 10;
+  byte uniteHeure = heureReglage % 10;
+  byte dizaineMinute = minuteReglage / 10;
+  byte uniteMinute = minuteReglage % 10;
 
   if (champReglage == REGLAGE_HEURE && !reglageVisible) {
     ht16k33EcrireChiffre(0, 0);
     ht16k33EcrireChiffre(1, 0);
   } else {
-    ht16k33EcrireChiffre(0, HT_MASQUE_CHIFFRE[hTens]);
-    ht16k33EcrireChiffre(1, HT_MASQUE_CHIFFRE[hUnits]);
+    ht16k33EcrireChiffre(0, HT_MASQUE_CHIFFRE[dizaineHeure]);
+    ht16k33EcrireChiffre(1, HT_MASQUE_CHIFFRE[uniteHeure]);
   }
 
   if (champReglage == REGLAGE_MINUTE && !reglageVisible) {
     ht16k33EcrireChiffre(2, 0);
     ht16k33EcrireChiffre(3, 0);
   } else {
-    ht16k33EcrireChiffre(2, HT_MASQUE_CHIFFRE[mTens]);
-    ht16k33EcrireChiffre(3, HT_MASQUE_CHIFFRE[mUnits]);
+    ht16k33EcrireChiffre(2, HT_MASQUE_CHIFFRE[dizaineMinute]);
+    ht16k33EcrireChiffre(3, HT_MASQUE_CHIFFRE[uniteMinute]);
   }
 }
 
-void reglerDeuxPoints(bool on) {
-  chiffrealWrite(PIN_DEUX_POINTS, on ? HIGH : LOW);
+void reglerDeuxPoints(bool active) {
+  chiffrealWrite(PIN_DEUX_POINTS, active ? HIGH : LOW);
 }
 
 // -------------------- DS3231 --------------------------------
-byte bcdVersDecimal(byte value) {
-  return ((value >> 4) * 10) + (value & 0x0F);
+byte bcdVersDecimal(byte valeur) {
+  return ((valeur >> 4) * 10) + (valeur & 0x0F);
 }
 
-byte decimalVersBcd(byte value) {
-  return ((value / 10) << 4) | (value % 10);
+byte decimalVersBcd(byte valeur) {
+  return ((valeur / 10) << 4) | (valeur % 10);
 }
 
 byte heureActuelle = 0;
@@ -225,29 +225,29 @@ byte positionContour = 0;
 byte couleurContour = 0;
 
 void effacerContour() {
-  pour (byte i = 0; i < NOMBRE_REGISTRES_DECALAGE; i++) {
+  for (byte i = 0; i < NOMBRE_REGISTRES_DECALAGE; i++) {
     donneesContour[i] = 0;
   }
 }
 
-void reglerGroupeContour(byte group, bool on) {
-  if (group >= NOMBRE_GROUPES_CONTOUR) return;
+void reglerGroupeContour(byte groupe, bool active) {
+  if (groupe >= NOMBRE_GROUPES_CONTOUR) return;
 
-  byte chip = group / 8;
-  byte bit = group % 8;
+  byte circuit = groupe / 8;
+  byte bit = groupe % 8;
 
-  if (on) {
-    donneesContour[chip] |= (byte)(1 << bit);
+  if (active) {
+    donneesContour[circuit] |= (byte)(1 << bit);
   } else {
-    donneesContour[chip] &= (byte)~(1 << bit);
+    donneesContour[circuit] &= (byte)~(1 << bit);
   }
 }
 
 void ecrireContour() {
   chiffrealWrite(PIN_595_VERROU, LOW);
 
-  pour (int chip = NOMBRE_REGISTRES_DECALAGE - 1; chip >= 0; chip--) {
-    shiftOut(PIN_595_DONNEES, PIN_HORLOGE, LSBFIRST, donneesContour[chip]);
+  for (int circuit = NOMBRE_REGISTRES_DECALAGE - 1; circuit >= 0; circuit--) {
+    shiftOut(PIN_595_DONNEES, PIN_HORLOGE, LSBFIRST, donneesContour[circuit]);
   }
 
   chiffrealWrite(PIN_595_VERROU, HIGH);
@@ -270,8 +270,8 @@ void mettreAJourContour() {
 
   effacerContour();
 
-  byte group = positionContour + (couleurContour * GROUPES_PAR_COULEUR);
-  reglerGroupeContour(group, true);
+  byte groupe = positionContour + (couleurContour * GROUPES_PAR_COULEUR);
+  reglerGroupeContour(groupe, true);
   ecrireContour();
 
   couleurContour++;
@@ -318,12 +318,12 @@ void demarrerMelodie() {
 void mettreAJourMelodie() {
   if (!demarrageActif) return;
 
-  unsigned long now = millis();
-  if (now < prochaineNote) return;
+  unsigned long maintenant = millis();
+  if (maintenant < prochaineNote) return;
 
   if (indexMelodie >= MELODIE_DEMARRAGE_COUNT) {
     noTone(PIN_AVERTISSEUR);
-    prochaineNote = now + 100000UL;
+    prochaineNote = maintenant + 100000UL;
     return;
   }
 
@@ -333,31 +333,31 @@ void mettreAJourMelodie() {
     MELODIE_DEMARRAGE[indexMelodie].duree - 10
   );
 
-  prochaineNote = now + MELODIE_DEMARRAGE[indexMelodie].duree;
+  prochaineNote = maintenant + MELODIE_DEMARRAGE[indexMelodie].duree;
   indexMelodie++;
 }
 
-void afficherEcranDemarrage(byte frame) {
-  byte mask = 0;
+void afficherEcranDemarrage(byte image) {
+  byte masque = 0;
 
-  switch (frame % 8) {
-    case 0: mask = HT_LIGNE0_SEG_A; break;
-    case 1: mask = HT_LIGNE1_SEG_B; break;
-    case 2: mask = HT_LIGNE2_SEG_C; break;
-    case 3: mask = HT_LIGNE3_SEG_D; break;
-    case 4: mask = HT_LIGNE4_SEG_E; break;
-    case 5: mask = HT_LIGNE5_SEG_F; break;
-    case 6: mask = HT_LIGNE6_SEG_G; break;
-    case 7: mask = HT_LIGNE0_SEG_A | HT_LIGNE1_SEG_B | HT_LIGNE2_SEG_C | HT_LIGNE3_SEG_D |
+  switch (image % 8) {
+    case 0: masque = HT_LIGNE0_SEG_A; break;
+    case 1: masque = HT_LIGNE1_SEG_B; break;
+    case 2: masque = HT_LIGNE2_SEG_C; break;
+    case 3: masque = HT_LIGNE3_SEG_D; break;
+    case 4: masque = HT_LIGNE4_SEG_E; break;
+    case 5: masque = HT_LIGNE5_SEG_F; break;
+    case 6: masque = HT_LIGNE6_SEG_G; break;
+    case 7: masque = HT_LIGNE0_SEG_A | HT_LIGNE1_SEG_B | HT_LIGNE2_SEG_C | HT_LIGNE3_SEG_D |
                       HT_LIGNE4_SEG_E | HT_LIGNE5_SEG_F | HT_LIGNE6_SEG_G; break;
   }
 
-  ht16k33EcrireChiffre(0, mask);
-  ht16k33EcrireChiffre(1, mask);
-  ht16k33EcrireChiffre(2, mask);
-  ht16k33EcrireChiffre(3, mask);
+  ht16k33EcrireChiffre(0, masque);
+  ht16k33EcrireChiffre(1, masque);
+  ht16k33EcrireChiffre(2, masque);
+  ht16k33EcrireChiffre(3, masque);
 
-  reglerDeuxPoints((frame % 2) == 0);
+  reglerDeuxPoints((image % 2) == 0);
 }
 
 // -------------------- ANTI-REBOND DES BOUTONS ------------------------
@@ -378,18 +378,18 @@ const unsigned long FENETRE_CLICS_MODE = 1000;
 byte nombreClicsMode = 0;
 unsigned long finFenetreMode = 0;
 
-bool boutonPresse(Bouton &button) {
-  bool reading = chiffrealRead(button.pin);
+bool boutonPresse(Bouton &bouton) {
+  bool lecture = chiffrealRead(bouton.pin);
 
-  if (reading != button.lectureBrute) {
-    button.lectureBrute = reading;
-    button.dernierChangement = millis();
+  if (lecture != bouton.lectureBrute) {
+    bouton.lectureBrute = lecture;
+    bouton.dernierChangement = millis();
   }
 
-  if (millis() - button.dernierChangement >= DELAI_ANTI_REBOND &&
-      reading != button.etatStable) {
-    button.etatStable = reading;
-    if (button.etatStable == LOW) return true;
+  if (millis() - bouton.dernierChangement >= DELAI_ANTI_REBOND &&
+      lecture != bouton.etatStable) {
+    bouton.etatStable = lecture;
+    if (bouton.etatStable == LOW) return true;
   }
 
   return false;
@@ -434,15 +434,15 @@ void arreterMontre() {
 void mettreAJourDemarrage() {
   if (!demarrageActif) return;
 
-  unsigned long now = millis();
+  unsigned long maintenant = millis();
 
-  if (now - derniereImageDemarrage >= INTERVALLE_IMAGE_DEMARRAGE) {
-    derniereImageDemarrage = now;
+  if (maintenant - derniereImageDemarrage >= INTERVALLE_IMAGE_DEMARRAGE) {
+    derniereImageDemarrage = maintenant;
     afficherEcranDemarrage(imageDemarrage);
     imageDemarrage++;
   }
 
-  if (now - debutDemarrage >= DUREE_DEMARRAGE) {
+  if (maintenant - debutDemarrage >= DUREE_DEMARRAGE) {
     demarrageActif = false;
     noTone(PIN_AVERTISSEUR);
 
@@ -608,7 +608,7 @@ void setup() {
   modeReglage = false;
 
   ht16k33Effacer();
-  ht16k33Commande(0x80); // display DESACTIVE
+  ht16k33Commande(0x80); // affichage DESACTIVE
 }
 
 void loop() {
