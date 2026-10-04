@@ -29,6 +29,26 @@ const byte HT_CMD_SYSTEM_ON    = 0x21;
 const byte HT_CMD_DISPLAY_ON   = 0x81;
 const byte HT_CMD_BRIGHTNESS   = 0xE0;
 
+
+// -------------------- GLOBAL WATCH STATE ---------------------
+bool watchOn = false;
+bool startupActive = false;
+unsigned long startupStart = 0;
+unsigned long lastStartupFrame = 0;
+byte startupFrame = 0;
+
+const unsigned long STARTUP_DURATION = 2300;
+const unsigned long STARTUP_FRAME_INTERVAL = 120;
+
+enum EditField { EDIT_HOUR, EDIT_MINUTE };
+bool editMode = false;
+EditField editField = EDIT_HOUR;
+byte editHour = 0;
+byte editMinute = 0;
+bool editVisible = true;
+unsigned long lastBlink = 0;
+const unsigned long BLINK_INTERVAL = 350;
+
 // -------------------- 7-SEGMENT MAP --------------------------
 // These bits correspond to HT16K33 ROW0..ROW7.
 // Wire the display exactly as:
@@ -89,6 +109,7 @@ void htInit() {
   htCommand(HT_CMD_BRIGHTNESS | 0x08);
 }
 
+// Writes one 8-bit segment pattern to ROW0..ROW7 for one COM line.
 void htWriteDigit(byte digitIndex, byte segments) {
   if (digitIndex > 3) return;
 
@@ -323,25 +344,6 @@ void displaySplash(byte frame) {
 
   setColon((frame % 2) == 0);
 }
-
-// -------------------- WATCH STATE ----------------------------
-bool watchOn = false;
-bool startupActive = false;
-unsigned long startupStart = 0;
-unsigned long lastStartupFrame = 0;
-byte startupFrame = 0;
-
-const unsigned long STARTUP_DURATION = 2300;
-const unsigned long STARTUP_FRAME_INTERVAL = 120;
-
-enum EditField { EDIT_HOUR, EDIT_MINUTE };
-bool editMode = false;
-EditField editField = EDIT_HOUR;
-byte editHour = 0;
-byte editMinute = 0;
-bool editVisible = true;
-unsigned long lastBlink = 0;
-const unsigned long BLINK_INTERVAL = 350;
 
 // -------------------- BUTTON DEBOUNCE ------------------------
 struct Button {
